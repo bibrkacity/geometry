@@ -98,14 +98,19 @@ class Upload
                 $yy[] = $height - 1;
                 $yy = array_unique($yy);
 
+                $xx_exists = [];
                 $yy_exists = [];
+
+                $found = false;
+                $exists_point_in_line_previous = false;
 
                 foreach ($yy as $y) {
                     $previous = 1;
                     $direction = 1; //white-to-black
-                    foreach ($xx as $x) {
-                        {
 
+                    $exists_point_in_line = false;
+
+                    foreach ($xx as $x) {
                             $color = imagecolorat($image, $x, $y);
 
                             if (
@@ -117,14 +122,38 @@ class Upload
                             ) {
                                 $points[] = ['x'=>$x,'y'=>$y, 'direction' => $direction];
                                 $direction = -1; // black-to-white
+                                $found = true;
 
+                                $exists_point_in_line = true;
+
+                                if( !in_array($x, $xx_exists) )
+                                    $xx_exists[] = $x;
                                 if( !in_array($y, $yy_exists) )
                                     $yy_exists[] = $y;
                             }
 
                             $previous = $color;
-                        }
                     }
+
+                    if( $found && !$exists_point_in_line && $exists_point_in_line_previous ){
+                        // Кончилась фигура (по вертикали) Проверим, не проскочила ли горизониальная сторона между линий
+
+                        $n = count($points);
+                        $p1 = $points[$n-2];
+                        $p2 = $points[$n-1];
+
+                        if( $p1['y'] == $p2['y'] ){
+
+                            if( $p2['x'] - $p1['x'] > $stepx * 5 ){
+                                // Заполним точками
+                                for($k = $p1['x'] + $stepx ; $k < $p2['x'] ; $k += $stepx ){
+                                    $points[] = ['x' => $k, 'y' => $y-$stepy , 'direction' => -1  ];
+                                }
+                            }
+                        }
+                        //break;
+                    }
+                    $exists_point_in_line_previous = $exists_point_in_line;
                 }
             }
         }catch (\Exception $e){
@@ -132,9 +161,7 @@ class Upload
             $points=[];
         }
 
-        $points = self::sorting( $yy_exists, $points);
-
-
+        $points = self::sorting( $xx_exists, $yy_exists, $points);
 
         return $points;
     }
@@ -230,9 +257,9 @@ class Upload
         return $image;
     }
 
-    private static function sorting( array $yy_exists, array $points):array
+    private static function sorting(array $xx_exists, array $yy_exists, array $points):array
     {
-
+        //sort($xx_exists);
         sort($yy_exists);
 
         //Строим левую часть, по часовой стрелке снизу вверх
