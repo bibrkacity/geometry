@@ -2,7 +2,7 @@
 
 ## Installation
 
-- Clone repository from [https://github.com/bibrkacity/shop.git](https://github.com/bibrkacity/shop.git).
+- Clone repository from [https://github.com/bibrkacity/geometry.git](https://github.com/bibrkacity/geometry.git).
 - Run composer.update
 - Run **php artisan serve**
 - Go to [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser
